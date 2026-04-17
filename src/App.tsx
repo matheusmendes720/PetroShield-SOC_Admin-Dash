@@ -121,6 +121,91 @@ const MetricCard = ({ title, value, unit, icon: Icon, colorClass = "text-matrix-
   </div>
 );
 
+interface AgentStatusProps {
+  key?: string;
+  agent: {
+    id: string;
+    name: string;
+    task: string;
+  };
+  phase: SOCPhase;
+}
+
+const AgentStatusCard = ({ agent, phase }: AgentStatusProps) => {
+  const getAgentDetails = () => {
+    switch (agent.id) {
+      case 'SUPERVISOR':
+        if (phase === 'INITIALIZING') return { status: 'BOOTING', active: true, color: 'text-accent-blue', icon: Cpu };
+        if (['RESPOND', 'LESSONS_LEARNT'].includes(phase)) return { status: 'ORCHESTRATING', active: true, color: 'text-accent-blue', icon: Activity };
+        return { status: 'IDLE', active: false, color: 'text-text-muted', icon: Shield };
+      case 'EDGE_DLP':
+        if (phase === 'MONITOR') return { status: 'SCANNING', active: true, color: 'text-accent-amber', icon: Activity };
+        if (phase === 'DETECT') return { status: 'ALERT', active: true, color: 'text-accent-red', icon: AlertTriangle };
+        if (phase === 'RESPOND') return { status: 'ISOLATING', active: true, color: 'text-accent-red', icon: Lock };
+        if (phase === 'IR_RECOVERY') return { status: 'PATCHING', active: true, color: 'text-accent-green', icon: CheckCircle2 };
+        return { status: 'IDLE', active: false, color: 'text-text-muted', icon: Shield };
+      case 'RAG_INTEL':
+        if (phase === 'ANALYSE') return { status: 'QUERYING', active: true, color: 'text-accent-blue', icon: Database };
+        return { status: 'SYNCED', active: false, color: 'text-accent-green', icon: CheckCircle2 };
+      default:
+        return { status: 'IDLE', active: false, color: 'text-text-muted', icon: Shield };
+    }
+  };
+
+  const details = getAgentDetails();
+  const Icon = details.icon;
+
+  return (
+    <div className={`flex items-center justify-between p-3 bg-white/5 border-l-4 rounded-r-sm transition-all duration-300 ${details.active ? 'border-accent-blue bg-accent-blue/5' : 'border-border-dim'}`}>
+      <div className="flex items-center gap-3">
+        <div className="relative">
+          {details.active && (
+            <motion.div
+              animate={{ scale: [1, 1.5, 1], opacity: [0.5, 0, 0.5] }}
+              transition={{ repeat: Infinity, duration: 2 }}
+              className={`absolute inset-0 rounded-full blur-sm ${details.color.replace('text-', 'bg-')}`}
+            />
+          )}
+          <div className={`relative p-2 rounded-full bg-black/40 border border-white/10 ${details.color}`}>
+            <Icon size={14} />
+          </div>
+        </div>
+        
+        <div className="flex flex-col">
+          <span className="text-[12px] font-bold tracking-tight">{agent.name}</span>
+          <div className="flex items-center gap-2 mt-0.5">
+            <div className="w-16 h-1 bg-white/10 rounded-full overflow-hidden">
+              <motion.div 
+                animate={{ width: details.active ? ['40%', '80%', '60%'] : '30%' }}
+                className={`h-full ${details.active ? 'bg-accent-blue' : 'bg-text-muted'}`} 
+              />
+            </div>
+            <span className="text-[8px] text-text-muted uppercase">Health: 98%</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex flex-col items-end gap-1">
+        <span className={`font-mono text-[10px] px-2 py-0.5 rounded uppercase tracking-wider ${details.active ? `${details.color} bg-white/10` : 'text-text-muted bg-white/5'}`}>
+          {details.status}
+        </span>
+        {details.active && (
+          <div className="flex gap-0.5">
+            {[1, 2, 3].map(i => (
+              <motion.div
+                key={i}
+                animate={{ height: [2, 8, 4] }}
+                transition={{ repeat: Infinity, duration: 0.5, delay: i * 0.1 }}
+                className={`w-0.5 ${details.color.replace('text-', 'bg-')}`}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 // --- Main App ---
 
 export default function App() {
@@ -315,19 +400,15 @@ export default function App() {
             <div className="text-[10px] uppercase text-text-muted tracking-widest font-bold">Active Agent Pool</div>
             <div className="flex flex-col gap-3">
               {[
-                { name: 'SUPERVISOR_V2', task: 'Orchestration Logic', status: 'IDLE', color: 'text-accent-blue' },
-                { name: 'EDGE_DLP_PROB', task: 'Deep Packet Inspection', status: state.phase === 'MONITOR' ? 'SCANNING' : 'IDLE', color: 'text-accent-amber' },
-                { name: 'RAG_INTEL_OPS', task: 'MITRE Contextualizer', status: 'SYNCED', color: 'text-accent-blue' },
+                { id: 'SUPERVISOR', name: 'SUPERVISOR_V2', task: 'Orchestration Logic' },
+                { id: 'EDGE_DLP', name: 'EDGE_DLP_PROB', task: 'Deep Packet Inspection' },
+                { id: 'RAG_INTEL', name: 'RAG_INTEL_OPS', task: 'MITRE Contextualizer' },
               ].map(agent => (
-                <div key={agent.name} className="flex items-center justify-between p-2.5 bg-white/5 border-l-3 border-accent-blue rounded-r-sm">
-                  <div className="flex flex-col">
-                    <span className="text-[12px] font-bold">{agent.name}</span>
-                    <span className="text-[10px] text-text-muted">{agent.task}</span>
-                  </div>
-                  <span className={`font-mono text-[10px] px-1.5 py-0.5 rounded ${agent.status === 'SCANNING' ? 'bg-accent-amber/10 text-accent-amber border border-accent-amber/20' : 'bg-accent-blue/10 text-accent-blue border border-accent-blue/20'}`}>
-                    {agent.status}
-                  </span>
-                </div>
+                <AgentStatusCard 
+                  key={agent.id} 
+                  agent={agent} 
+                  phase={state.phase} 
+                />
               ))}
             </div>
           </div>
