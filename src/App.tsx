@@ -16,8 +16,13 @@ import { GoogleGenAI } from '@google/genai';
 import { SOCPhase, SOCState, LogEntry, ThreatEvent } from './types';
 import { MOCK_THREATS, AGENT_LIST } from './simulationData';
 
-// --- Components ---
+// --- Componentes de Interface AxeGuard ---
 
+/**
+ * @component AxeTorch
+ * Representação visual estética da "Tocha de Segurança" do PetroShield.
+ * Utiliza Framer Motion para simular cintilação e brilho atmosférico.
+ */
 const AxeTorch = () => {
   return (
     <div className="relative w-16 h-24 flex items-center justify-center">
@@ -44,6 +49,12 @@ const AxeTorch = () => {
   );
 };
 
+/**
+ * @component TerminalWindow
+ * Janela TUI (Terminal User Interface) para stream de logs em tempo real.
+ * Implementa auto-scroll dinâmico e tipagem visual baseada no agente emissor.
+ * Funciona como o "Feed de Auditoria" da BFF em memória.
+ */
 const TerminalWindow = ({ logs }: { logs: LogEntry[] }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -108,6 +119,11 @@ const TerminalWindow = ({ logs }: { logs: LogEntry[] }) => {
   );
 };
 
+/**
+ * @component MetricCard
+ * Widget de visualização de KPI (Key Performance Indicator).
+ * Utilizado para exibir métricas protegidas e ROI de segurança na Dashboard.
+ */
 const MetricCard = ({ title, value, unit, icon: Icon, colorClass = "text-matrix-green" }: any) => (
   <div className="tui-border bg-black/40 p-3 space-y-1 relative overflow-hidden group">
     <div className={`absolute top-0 right-0 p-2 opacity-20 group-hover:opacity-40 transition-opacity`}>
@@ -131,6 +147,12 @@ interface AgentStatusProps {
   phase: SOCPhase;
 }
 
+/**
+ * @component AgentStatusCard
+ * Representação dinâmica do ciclo de vida de um agente autônomo.
+ * Gerencia estados visuais (IDLE vs ATIVO) e animações de processamento.
+ * Implementa lógica de "Saúde do Agente" e indicadores de CPU.
+ */
 const AgentStatusCard = ({ agent, phase }: AgentStatusProps) => {
   const getAgentDetails = () => {
     switch (agent.id) {
